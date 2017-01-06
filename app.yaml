@@ -1,0 +1,16 @@
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+handlers:
+- url: /.*
+  script: main.app
+
+libraries:
+- name: MySQLdb
+  version: "latest"
+
+env_variables:
+    CLOUDSQL_CONNECTION_NAME: digital-proton-146222:us-central1:test
+    CLOUDSQL_USER: root
+    CLOUDSQL_PASSWORD: password

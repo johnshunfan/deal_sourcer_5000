@@ -1,0 +1,7 @@
+*.swp
+*.csv
+*.delete
+*.pyc
+data/
+test1/
+test2/
