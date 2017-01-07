@@ -1,0 +1,6 @@
+Flask==0.12
+requests==2.11.1
+requests-toolbelt==0.7.0
+SQLAlchemy==1.1.4
+tldextract==2.0.2
+PyMySQL==0.7.9

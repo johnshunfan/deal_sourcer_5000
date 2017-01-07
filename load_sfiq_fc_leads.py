@@ -7,6 +7,7 @@ import ConfigParser
 import traceback
 import re
 import requests
+import requests_toolbelt.adapters.appengine
 import json
 import re
 from time import time
@@ -15,6 +16,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sp_util import format_string, format_number, format_date
+
+# Use the App Engine Requests adapter. This makes sure that Requests uses
+# URLFetch.
+requests_toolbelt.adapters.appengine.monkeypatch()
 
 def printJ(jData):
     print json.dumps(jData, indent=4, sort_keys=True)
@@ -87,23 +92,10 @@ def get_fc_leads(fc_lead_dict, companies, session):
     print 'loaded data'
     return fc_lead_dict
 
-def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0):
-    # foundation salesforce
-    API_KEY= '581312c7e4b04c9692fadf3e'
-    API_SECRET= '1383QhosG3Eh4JUDoWLTRa0RnFr'
-    # FC lead is field id '1'
-    NEWCO_LIST_ID = '56fae761e4b07e602ad2e0fe'
-
-    t = time()
-
-    #Create the database
-    print 'connecting to mysql database'
-    config = ConfigParser.ConfigParser()
-    config.read('properties.ini')
-    engine = create_engine(config.get('properties', 'engine_string'))
+def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
+    if engine is None:
+        return
     Base.metadata.create_all(engine)
-
-    #Create the session
     session = sessionmaker()
     session.configure(bind=engine)
     s = session()
@@ -126,6 +118,21 @@ if __name__ == "__main__":
     API_KEY= '581312c7e4b04c9692fadf3e'
     API_SECRET= '1383QhosG3Eh4JUDoWLTRa0RnFr'
     NEWCO_LIST_ID = '56fae761e4b07e602ad2e0fe'
-    get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET)
+
+    t = time()
+
+    #Create the database
+    print 'connecting to mysql database'
+    config = ConfigParser.ConfigParser()
+    config.read('properties.ini')
+    engine = create_engine(config.get('properties', 'engine_string'))
+    Base.metadata.create_all(engine)
+
+    #Create the session
+    session = sessionmaker()
+    session.configure(bind=engine)
+    s = session()
+
+    get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, s)
     # TODO why does putting in 2050 work but not 0? auto loading size doesn't work??
 
