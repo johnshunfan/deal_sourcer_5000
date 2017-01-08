@@ -1,12 +1,11 @@
-from flask import Flask, request
-from time import time
 import os
+from time import time
+
+from flask import Flask, request
+from google.appengine.api import taskqueue
 import MySQLdb
-from sqlalchemy import Column, BigInteger, Integer, Float, DateTime, String, Index
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import webapp2
 
 from load_sfiq_fc_leads import get_all_list_items
 
@@ -58,16 +57,15 @@ def connect_to_cloudsql_sqlalchemy():
     engine = create_engine(connection_string)
     return engine
 
-
-
-
 @app.route('/comment/<row_id>', methods=['GET', 'POST'])
 def hello(row_id):
     db = connect_to_cloudsql()
     comment = request.form['comment'][:1000]
 
     cursor = db.cursor()
-    cmd = 'UPDATE companies SET comment="{0}" WHERE id={1}'.format(comment, row_id)
+    cmd = '''
+          UPDATE companies SET comment="{0}" WHERE id={1}
+          '''.format(comment, row_id)
     cursor.execute(cmd)
     resp = ''
     for r in cursor.fetchall():
@@ -80,18 +78,9 @@ def hello(row_id):
 
 @app.route('/refresh_newco', methods=['GET'])
 def refresh_newco():
-
-    #Create the session
-    engine = connect_to_cloudsql_sqlalchemy()
-    session = sessionmaker()
-    session.configure(bind=engine)
-    s = session()
-
-    connection = engine.connect()
-    result = connection.execute('DROP TABLE IF EXISTS fc_leads')
-    connection.close()
-
-    get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, engine = engine)
+    task = taskqueue.add(
+        url='/update_fc_leads',
+        target='worker')
     return 'done'
 
 @app.errorhandler(404)

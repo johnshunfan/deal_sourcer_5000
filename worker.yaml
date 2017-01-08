@@ -1,0 +1,14 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+module: worker
+
+handlers:
+- url: /.*
+  script: worker.app
+  login: admin
+
+libraries:
+- name: MySQLdb
+  version: "latest"
+

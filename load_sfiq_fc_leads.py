@@ -4,12 +4,11 @@
 # TODO load id as well to edit?
 import csv
 import ConfigParser
-import traceback
 import re
 import requests
 import requests_toolbelt.adapters.appengine
+import traceback
 import json
-import re
 from time import time
 from sqlalchemy import Column, BigInteger, Integer, Float, DateTime, String, Index
 from sqlalchemy.ext.declarative import declarative_base
