@@ -3,6 +3,7 @@ from time import time
 
 from flask import Flask, request
 from google.appengine.api import taskqueue
+from google.cloud import storage
 import MySQLdb
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -17,8 +18,8 @@ CLOUDSQL_CONNECTION_NAME = os.environ.get('CLOUDSQL_CONNECTION_NAME')
 CLOUDSQL_USER = os.environ.get('CLOUDSQL_USER')
 CLOUDSQL_PASSWORD = os.environ.get('CLOUDSQL_PASSWORD')
 # variables for refresh newco
-API_KEY= '581312c7e4b04c9692fadf3e'
-API_SECRET= '1383QhosG3Eh4JUDoWLTRa0RnFr'
+API_KEY = '581312c7e4b04c9692fadf3e'
+API_SECRET = '1383QhosG3Eh4JUDoWLTRa0RnFr'
 NEWCO_LIST_ID = '56fae761e4b07e602ad2e0fe'
 
 # initialize flask
@@ -53,7 +54,9 @@ def connect_to_cloudsql():
     return db
 
 def connect_to_cloudsql_sqlalchemy():
-    connection_string = 'mysql+mysqldb://root:password@/test3?unix_socket=/cloudsql/digital-proton-146222:us-central1:test'
+    connection_string = (
+        'mysql+mysqldb://root:password@/test3?unix_socket='
+        '/cloudsql/digital-proton-146222:us-central1:test')
     engine = create_engine(connection_string)
     return engine
 
@@ -82,6 +85,27 @@ def refresh_newco():
         url='/update_fc_leads',
         target='worker')
     return 'done'
+
+@app.route('/', methods=['GET', 'POST'])
+def upload_files():
+    if request.method == 'GET':
+        # Serve static upload form
+        return '''
+            <!doctype html>
+            <form action="#" method="post" enctype="multipart/form-data">
+                <input type="file" name="file"/>
+                <input type="submit" value="Upload" />
+            </form>
+            '''
+    if request.method == 'POST':
+        my_file = request.files['file']
+
+        storage_client = storage.Client()
+        bucket = storage_client.get_bucket('ds5000')
+        blob = bucket.blob(my_file.filename)
+        blob.upload_from_file(my_file, size=my_file.content_length)
+        return ('File {} uploaded.'.format(
+            my_file.filename))
 
 @app.errorhandler(404)
 def page_not_found(e):

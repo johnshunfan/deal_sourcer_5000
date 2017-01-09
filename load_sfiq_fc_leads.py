@@ -110,7 +110,6 @@ def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
         index += 200
     print 'completed all iterations of loading data'
 
-
     #userId = (item for item in data['objects'] if item['name'].lower() == companyName.lower()).next()['fieldValues']['1'][0]['raw']
 
 if __name__ == "__main__":
