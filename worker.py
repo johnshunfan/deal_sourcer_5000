@@ -4,13 +4,17 @@ import webapp2
 
 from load_sfiq_fc_leads import get_all_list_items
 
-API_KEY = '581312c7e4b04c9692fadf3e'
-API_SECRET = '1383QhosG3Eh4JUDoWLTRa0RnFr'
-NEWCO_LIST_ID = '56fae761e4b07e602ad2e0fe'
+CLOUDSQL_CONNECTION_NAME = os.environ.get('CLOUDSQL_CONNECTION_NAME')
+CLOUDSQL_USER = os.environ.get('CLOUDSQL_USER')
+CLOUDSQL_PASSWORD = os.environ.get('CLOUDSQL_PASSWORD')
+API_KEY = os.environ.get('API_KEY')
+API_SECRET = os.environ.get('API_SECRET')
+NEWCO_LIST_ID = os.environ.get('NEWCO_LIST_ID')
 
 def connect_to_cloudsql_sqlalchemy():
-    connection_string = ('mysql+mysqldb://root:password@/test3?unix_socket='
-                         '/cloudsql/digital-proton-146222:us-central1:test')
+    connection_string =
+        ('mysql+mysqldb://{0}:{1}@/test3?unix_socket=/cloudsql/{2}')
+            .format(CLOUDSQL_USER, CLOUDSQL_PASSWORD, CLOUDSQL_CONNECTION_NAME)
     engine = create_engine(connection_string)
     return engine
 

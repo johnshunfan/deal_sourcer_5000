@@ -17,10 +17,6 @@ from load_sfiq_fc_leads import get_all_list_items
 CLOUDSQL_CONNECTION_NAME = os.environ.get('CLOUDSQL_CONNECTION_NAME')
 CLOUDSQL_USER = os.environ.get('CLOUDSQL_USER')
 CLOUDSQL_PASSWORD = os.environ.get('CLOUDSQL_PASSWORD')
-# variables for refresh newco
-API_KEY = '581312c7e4b04c9692fadf3e'
-API_SECRET = '1383QhosG3Eh4JUDoWLTRa0RnFr'
-NEWCO_LIST_ID = '56fae761e4b07e602ad2e0fe'
 
 # initialize flask
 app = Flask(__name__)
