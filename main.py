@@ -90,28 +90,38 @@ def upload_files():
         # Serve static upload form
         return '''
             <!doctype html>
-            <form action="#" method="post" enctype="multipart/form-data">
+            Pitchbook
+            <form action="/load_file"
+                    method="post" enctype="multipart/form-data">
+                <input type="hidden" name="destination" value="/load_pb_rounds"/>
+                <input type="file" name="file"/>
+                <input type="submit" value="Upload" />
+            </form>
+            <br/>
+            Second Measure
+            <form action="/load_file"
+                    method="post" enctype="multipart/form-data">
+                <input type="hidden" name="destination" value="/load_sm_csv"/>
                 <input type="file" name="file"/>
                 <input type="submit" value="Upload" />
             </form>
             '''
-    if request.method == 'POST':
-        my_file = request.files['file']
 
-        storage_client = storage.Client()
-        bucket = storage_client.get_bucket('ds5000')
-        blob = bucket.blob(my_file.filename)
-        blob.upload_from_file(my_file, size=my_file.content_length)
-        task = taskqueue.add(
-            url='/update_pb_rounds',
-            target='worker',
-            params={'filename': my_file.filename})
+@app.route('/load_file', methods=['POST'])
+def begin_update_pb_rounds():
+    my_file = request.files['file']
 
+    storage_client = storage.Client()
+    bucket = storage_client.get_bucket('ds5000')
+    blob = bucket.blob(my_file.filename)
+    blob.upload_from_file(my_file, size=my_file.content_length)
+    task = taskqueue.add(
+        url=request.form['destination'],
+        target='worker',
+        params={'filename': my_file.filename})
 
-        #filename = '/ds5000/' + my_file.filename
-        #new_file = gcs.open(filename)
-        return ('File {} uploaded.'.format(
-            my_file.filename))
+    return ('File {} uploaded.'.format(
+        my_file.filename))
 
 @app.route('/begin_transform_sm_growth', methods=['GET'])
 def begin_transform_sm_growth():

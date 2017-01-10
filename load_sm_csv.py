@@ -18,23 +18,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sp_util import format_string, format_number, format_date, format_domain
 
-def Load_Data(file_name):
-    with open(file_name, 'rU') as csvfile:
-        rounds = csv.reader(csvfile)
-        return list(rounds)[1:]
-
 Base = declarative_base()
 
 class SmMonthlyRevenue(Base):
-    #Tell SQLAlchemy what the table name is and if there's any table-specific arguments it should know about
     __tablename__ = 'sm_monthly_revenue'
-    #tell SQLAlchemy the name of column and its attributes:
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(255))
     domain = Column(String(255))
     month = Column(DateTime())
     observed_sales = Column(BigInteger())
-    __table_args__ = (Index('name', 'name'), Index('month', 'month'), Index('domain', 'domain'), Index('nd', 'name', 'domain'))
+    __table_args__ = (Index('name', 'name'),
+                      Index('month', 'month'),
+                      Index('domain', 'domain'),
+                      Index('nd', 'name', 'domain'))
 
 def build_object(data):
     return SmMonthlyRevenue(**{
@@ -44,14 +40,7 @@ def build_object(data):
         'observed_sales':data[3]
     })
 
-def load_from_sm_csv(file_name):
-    t = time()
-
-    #Create the database
-    print 'connecting to mysql database'
-    config = ConfigParser.ConfigParser()
-    config.read('properties.ini')
-    engine = create_engine(config.get('properties', 'engine_string'))
+def load_from_sm_csv(csvfile, engine):
     Base.metadata.create_all(engine)
 
     #Create the session
@@ -60,7 +49,8 @@ def load_from_sm_csv(file_name):
     s = session()
 
     print 'loading file'
-    data = Load_Data(file_name)
+    rounds = csv.reader(csvfile)
+    data = list(rounds)[1:]
     print 'loaded file'
 
     print 'loading to database'
@@ -84,7 +74,16 @@ def load_from_sm_csv(file_name):
                 break
 
     s.close() #Close the connection
-    print "Time elapsed: " + str(time() - t) + " s." #0.091s
 
 if __name__ == "__main__":
-    load_from_sm_csv('data/sales_monthly.csv')
+    t = time()
+
+    #Create the database
+    print 'connecting to mysql database'
+    engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
+    Base.metadata.create_all(engine)
+
+    with open('data/sales_monthly.csv', 'rU') as csvfile:
+        load_from_sm_csv(csvfile=csvfile, engine=engine)
+
+    print "Time elapsed: " + str(time() - t) + " s." #0.091s
