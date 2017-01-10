@@ -70,8 +70,6 @@ def dedupe_pb_rounds(connection):
         return
 
 def load_from_pitchbook(csvfile, engine):
-    if engine is None:
-        return
     Base.metadata.create_all(engine)
 
     #Create the session

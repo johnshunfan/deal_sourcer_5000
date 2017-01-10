@@ -4,7 +4,7 @@ threadsafe: true
 service: worker
 
 handlers:
-- url: /update.*
+- url: /.*
   script: worker.app
   login: admin
 

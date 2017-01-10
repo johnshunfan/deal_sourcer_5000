@@ -113,6 +113,13 @@ def upload_files():
         return ('File {} uploaded.'.format(
             my_file.filename))
 
+@app.route('/begin_transform_sm_growth', methods=['GET'])
+def begin_transform_sm_growth():
+    task = taskqueue.add(
+        url='/transform_sm_growth',
+        target='worker')
+    return 'done'
+
 @app.errorhandler(404)
 def page_not_found(e):
     """Return a custom 404 error."""
