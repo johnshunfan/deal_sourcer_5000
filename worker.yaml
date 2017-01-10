@@ -4,9 +4,13 @@ threadsafe: true
 service: worker
 
 handlers:
-- url: /.*
+- url: /update.*
   script: worker.app
   login: admin
+
+- url: /static
+  static_dir: static
+  application_readable: true
 
 libraries:
 - name: MySQLdb
@@ -19,3 +23,4 @@ env_variables:
     API_KEY: '581312c7e4b04c9692fadf3e'
     API_SECRET: '1383QhosG3Eh4JUDoWLTRa0RnFr'
     NEWCO_LIST_ID: '56fae761e4b07e602ad2e0fe'
+

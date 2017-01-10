@@ -1,6 +1,7 @@
 import os
 from time import time
 
+#import cloudstorage as gcs
 from flask import Flask, request
 from google.appengine.api import taskqueue
 from google.cloud import storage
@@ -9,6 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from load_sfiq_fc_leads import get_all_list_items
+from sp_util import format_domain
 
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
@@ -100,6 +102,14 @@ def upload_files():
         bucket = storage_client.get_bucket('ds5000')
         blob = bucket.blob(my_file.filename)
         blob.upload_from_file(my_file, size=my_file.content_length)
+        task = taskqueue.add(
+            url='/update_pb_rounds',
+            target='worker',
+            params={'filename': my_file.filename})
+
+
+        #filename = '/ds5000/' + my_file.filename
+        #new_file = gcs.open(filename)
         return ('File {} uploaded.'.format(
             my_file.filename))
 

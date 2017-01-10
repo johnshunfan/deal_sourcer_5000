@@ -1,6 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import re
 from datetime import datetime
 import tldextract
@@ -8,7 +9,9 @@ import tldextract
 def format_domain(data):
     if data == '':
         return None
-    ext = tldextract.extract(data)
+    file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/tld_set_snapshot.json')
+    ae_extract = tldextract.TLDExtract(cache_file=file_path)
+    ext = ae_extract(data)
     if ext.domain == 'angel' and ext.suffix == 'co':
         return ext.domain + '.' + ext.suffix + data[data.find('angel.co') + 8:]
     if ext.subdomain == 'www' or ext.subdomain == '':

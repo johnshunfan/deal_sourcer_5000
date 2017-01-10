@@ -95,6 +95,8 @@ def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
     if engine is None:
         return
     Base.metadata.create_all(engine)
+
+    #Create the session
     session = sessionmaker()
     session.configure(bind=engine)
     s = session()
@@ -132,5 +134,4 @@ if __name__ == "__main__":
     s = session()
 
     get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, s)
-    # TODO why does putting in 2050 work but not 0? auto loading size doesn't work??
 
