@@ -48,12 +48,12 @@ def load_from_sm_csv(csvfile, engine):
     session.configure(bind=engine)
     s = session()
 
-    print 'loading file'
+    #print 'loading file'
     rounds = csv.reader(csvfile)
     data = list(rounds)[1:]
-    print 'loaded file'
+    #print 'loaded file'
 
-    print 'loading to database'
+    #print 'loading to database'
     for i in range(0, len(data)):
     #for i in range(000, 10):
         try:
@@ -62,15 +62,15 @@ def load_from_sm_csv(csvfile, engine):
             record = build_object(data[i])
             s.add(record) #Add all the records
         except:
-            print 'error in: ' + str(i) + ', ' + data[i][0] + ':' + traceback.format_exc()
+            #print 'error in: ' + str(i) + ', ' + data[i][0] + ':' + traceback.format_exc()
         if (i % 1000 == 0 or i == len(data) - 1):
-            print 'index: ' + str(i)
+            #print 'index: ' + str(i)
             # if can't commit, then rollback
             try:
                 s.commit()
             except:
                 s.rollback() #Rollback the changes on error
-                print 'Unexpected error on index ' + str(i) + ':' + traceback.format_exc()
+                #print 'Unexpected error on index ' + str(i) + ':' + traceback.format_exc()
                 break
 
     s.close() #Close the connection

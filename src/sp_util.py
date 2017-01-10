@@ -9,7 +9,7 @@ import tldextract
 def format_domain(data):
     if data == '':
         return None
-    file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/tld_set_snapshot.json')
+    file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../static/tld_set_snapshot.json')
     ae_extract = tldextract.TLDExtract(cache_file=file_path)
     ext = ae_extract(data)
     if ext.domain == 'angel' and ext.suffix == 'co':

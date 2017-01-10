@@ -9,9 +9,6 @@ import MySQLdb
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from load_sfiq_fc_leads import get_all_list_items
-from sp_util import format_domain
-
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
 
