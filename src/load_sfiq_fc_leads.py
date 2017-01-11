@@ -1,9 +1,7 @@
 #! /usr/bin/python
 
 # load all of salesforce IQ fc leads into the database
-# TODO load id as well to edit?
 import csv
-import ConfigParser
 import re
 import requests
 import requests_toolbelt.adapters.appengine
@@ -92,8 +90,6 @@ def get_fc_leads(fc_lead_dict, companies, session):
     return fc_lead_dict
 
 def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
-    if engine is None:
-        return
     Base.metadata.create_all(engine)
 
     #Create the session
@@ -103,9 +99,10 @@ def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
 
     size = select_list_items(list_id, 0, 0, API_KEY, API_SECRET)['totalSize'] if limit == 0 else limit
     print 'size=' + str(size)
-    index = 0
+    index = 1
     fc_lead_dict = {}
     while index <= size:
+        print 'begin loading index: ' + str(index) + ' to: ' + str(index+200)
         data = select_list_items(list_id, index, 200, API_KEY, API_SECRET)
         fc_lead_dict = get_fc_leads(fc_lead_dict, data, session=s)
         print 'finished loading index: ' + str(index) + ' to: ' + str(index+200)
@@ -123,15 +120,8 @@ if __name__ == "__main__":
 
     #Create the database
     print 'connecting to mysql database'
-    config = ConfigParser.ConfigParser()
-    config.read('properties.ini')
-    engine = create_engine(config.get('properties', 'engine_string'))
+    engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
-    #Create the session
-    session = sessionmaker()
-    session.configure(bind=engine)
-    s = session()
-
-    get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, s)
+    get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, engine=engine)
 
