@@ -117,15 +117,6 @@ def load_from_pitchbook(csvfile, engine):
             print 'error in: ' + str(i) + ', ' + data[i][1] + ':' + traceback.format_exc()
         if (i % 1000 == 0 or i == len(data) - 1):
             print 'index: ' + str(i)
-        #if (i % 1000 == 0 or i == len(data) - 1):
-        #    print 'index: ' + str(i)
-        #    # if can't commit, then rollback
-        #    try:
-        #        s.commit()
-        #    except:
-        #        s.rollback() #Rollback the changes on error
-        #        print 'Unexpected error on index ' + str(i) + ':' + traceback.format_exc()
-        #        break
     print 'committing'
     try:
         s.commit()

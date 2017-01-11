@@ -8,6 +8,8 @@ import webapp2
 from src.load_sfiq_fc_leads import get_all_list_items
 from src.load_sm_csv import load_from_sm_csv
 from src.load_pb_rounds import load_from_pitchbook, dedupe_pb_rounds
+from src.transform_categories import transform_to_categories, dedupe_categories
+from src.transform_investors import transform_to_investors, dedupe_investors
 from src.transform_sm_growth import transform_to_sm_growth
 
 CLOUDSQL_CONNECTION_NAME = os.environ.get('CLOUDSQL_CONNECTION_NAME')
@@ -50,12 +52,28 @@ class LoadPbRoundsHandler(webapp2.RequestHandler):
         session = sessionmaker()
         session.configure(bind=engine)
 
-
+        # load pitchbook rounds
         load_from_pitchbook(csvfile=new_file, engine=engine)
 
-        # de duplicate
+        # de-duplicate pitchbook rounds
         connection = engine.connect()
         dedupe_pb_rounds(connection)
+        connection.close()
+
+        # transform categories
+        transform_to_categories(load_pb=True, load_cb=False, engine=engine)
+
+        # de-duplicate categories
+        connection = engine.connect()
+        dedupe_categories(connection)
+        connection.close()
+
+        # transform investors
+        transform_to_investors(load_pb=True, load_cb=False, engine=engine)
+
+        # de-duplicate investors
+        connection = engine.connect()
+        dedupe_investors(connection)
         connection.close()
 
         self.response.write('done')
