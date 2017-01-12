@@ -2,15 +2,15 @@ import os
 
 import cloudstorage as gcs
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import webapp2
 
-from src.load_sfiq_fc_leads import get_all_list_items
+from src.load_sfiq_fc_leads import get_all_list_items, combine_with_fc_lead
 from src.load_sm_csv import load_from_sm_csv
 from src.load_pb_rounds import load_from_pitchbook, dedupe_pb_rounds
 from src.transform_categories import transform_to_categories, dedupe_categories
+from src.transform_companies import transform_to_companies, dedupe_companies
 from src.transform_investors import transform_to_investors, dedupe_investors
-from src.transform_sm_growth import transform_to_sm_growth
+from src.transform_sm_growth import transform_to_sm_growth, combine_with_growth
 
 CLOUDSQL_CONNECTION_NAME = os.environ.get('CLOUDSQL_CONNECTION_NAME')
 CLOUDSQL_USER = os.environ.get('CLOUDSQL_USER')
@@ -28,16 +28,15 @@ def connect_to_cloudsql_sqlalchemy():
 
 class UpdateFcLeadsHandler(webapp2.RequestHandler):
     def post(self):
-        #Create the session
+        #Create the engine
         engine = connect_to_cloudsql_sqlalchemy()
-        session = sessionmaker()
-        session.configure(bind=engine)
 
         connection = engine.connect()
         result = connection.execute('DROP TABLE IF EXISTS fc_leads')
         connection.close()
 
         get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, engine=engine)
+
         self.response.write('done')
 
 class LoadPbRoundsHandler(webapp2.RequestHandler):
@@ -49,8 +48,6 @@ class LoadPbRoundsHandler(webapp2.RequestHandler):
 
         # create engine
         engine = connect_to_cloudsql_sqlalchemy()
-        session = sessionmaker()
-        session.configure(bind=engine)
 
         # load pitchbook rounds
         load_from_pitchbook(csvfile=new_file, engine=engine)
@@ -76,6 +73,19 @@ class LoadPbRoundsHandler(webapp2.RequestHandler):
         dedupe_investors(connection)
         connection.close()
 
+        # rebuild companies
+        transform_to_companies(load_pb=True, load_cb=False, engine=engine)
+
+        # de-duplicate companies
+        connection = engine.connect()
+        dedupe_companies(connection)
+        connection.close()
+
+        # combine with FC Leads
+        connection = engine.connect()
+        combine_with_fc_lead(connection)
+        connection.close()
+
         self.response.write('done')
 
 class LoadSmCsvHandler(webapp2.RequestHandler):
@@ -87,8 +97,6 @@ class LoadSmCsvHandler(webapp2.RequestHandler):
 
         # create engine
         engine = connect_to_cloudsql_sqlalchemy()
-        session = sessionmaker()
-        session.configure(bind=engine)
 
         connection = engine.connect()
         result = connection.execute('DROP TABLE IF EXISTS sm_monthly_revenue')
@@ -97,14 +105,17 @@ class LoadSmCsvHandler(webapp2.RequestHandler):
         # transform second measure growth
         load_from_sm_csv(csvfile=new_file, engine=engine)
 
+        # combine with growth
+        connection = engine.connect()
+        combine_with_growth(connection)
+        connection.close()
+
         self.response.write('done')
 
 class TransformSmGrowthHandler(webapp2.RequestHandler):
     def post(self):
         # create engine
         engine = connect_to_cloudsql_sqlalchemy()
-        session = sessionmaker()
-        session.configure(bind=engine)
 
         connection = engine.connect()
         result = connection.execute('DROP TABLE IF EXISTS growth')

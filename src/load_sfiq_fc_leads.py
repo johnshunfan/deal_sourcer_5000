@@ -89,6 +89,17 @@ def get_fc_leads(fc_lead_dict, companies, session):
     print 'loaded data'
     return fc_lead_dict
 
+def combine_with_fc_lead(connection):
+    print 'combining companies and fc leads'
+    result = connection.execute(
+        '''
+        UPDATE companies c
+        INNER JOIN fc_leads fc
+        ON c.company_website = fc.domain
+            OR c.company_name = fc.name
+        SET c.fc_lead = fc.name
+        ''')
+
 def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
     Base.metadata.create_all(engine)
 

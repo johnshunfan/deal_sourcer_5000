@@ -79,6 +79,7 @@ def load_from_pitchbook(csvfile, engine):
 
     print 'loading file'
     rounds = csv.reader(csvfile)
+    # edit for different types of CSV
     data =  list(rounds)[8:-3]
     print 'loaded file'
 

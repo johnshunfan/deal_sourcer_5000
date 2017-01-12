@@ -46,7 +46,7 @@ class CompanyGrowth(Base):
     twelve = Column(Integer)
     __table_args__ = (Index('name', 'name'), Index('last', 'last_revenue'))
 
-def build_object(name, domain, sales, growth, last):
+def build_object(name, domain, sales, growth):
     return CompanyGrowth(**{
         'name':name,
         'domain':domain,
@@ -66,7 +66,7 @@ def build_object(name, domain, sales, growth, last):
         'ten':sales[9],
         'eleven':sales[10],
         'twelve':sales[11],
-        'last_revenue':last
+        'last_revenue':sales[0]
     })
 
 def calculate_growth(months, sales):
@@ -89,6 +89,18 @@ def calculate_growth(months, sales):
         if i in milestones:
             growth[milestones.index(i)] = format(g_sum / float(i+1), '.0f')
     return growth
+
+def combine_with_growth(connection):
+    print 'combining companies with growth'
+    result = connection.execute(
+        '''
+        UPDATE companies c
+        INNER JOIN growth g
+        ON c.company_website = g.domain
+            OR c.company_name = g.name
+        SET c.revenue_growth_1mo = g.one_month,
+            c.last_month_revenue = g.one
+        ''')
 
 def transform_to_sm_growth(engine):
     Base.metadata.create_all(engine)
@@ -115,7 +127,7 @@ def transform_to_sm_growth(engine):
 
         growth = calculate_growth(months=months, sales=sales)
         record = build_object(name=name, domain=domain, sales=sales,
-                              growth=growth, last=sales[0])
+                              growth=growth)
         s.add(record)
 
     try:
