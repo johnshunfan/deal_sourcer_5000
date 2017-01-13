@@ -39,6 +39,7 @@ class Company(Base):
     revenue_growth_1mo = Column(Float())
     last_month_revenue = Column(Float())
     fc_lead = Column(String(255))
+    comment_url = Column(String(1023))
     __table_args__ = (
             Index('name', 'company_name'),
             Index('domain', 'company_website'),

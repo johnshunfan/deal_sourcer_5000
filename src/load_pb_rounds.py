@@ -19,6 +19,7 @@ from sp_util import format_string, format_number, format_date, format_float, for
 Base = declarative_base()
 
 class PbRound(Base):
+    '''SQLAlchemy model for a Pitchbook Round'''
     __tablename__ = 'pb_rounds'
     #tell SQLAlchemy the name of column and its attributes:
     id = Column(Integer, primary_key=True, nullable=False)
@@ -45,21 +46,21 @@ class PbRound(Base):
     deal_type = Column(String(255))
     pitchbook_link = Column(String(255))
     __table_args__ = (
-        Index('company_id','company_name'),
+        Index('company_id', 'company_name'),
         Index('company_website', 'company_website'))
 
 def delete_old_table(table_name, connection):
-    result = connection.execute(
-            '''
-            drop table {0}
-            '''.format(table_name)
+    connection.execute(
+        '''
+        drop table {0}
+        '''.format(table_name)
     )
 
 def dedupe_pb_rounds(connection):
     '''Execute sql to delete duplicates in pb_rounds'''
     print 'de duplicating pb_rounds'
     try:
-        result = connection.execute(
+        connection.execute(
             '''
             DELETE a
             FROM pb_rounds a, pb_rounds b
@@ -80,7 +81,7 @@ def load_from_pitchbook(csvfile, engine):
     print 'loading file'
     rounds = csv.reader(csvfile)
     # edit for different types of CSV
-    data =  list(rounds)[8:-3]
+    data = list(rounds)[8:-3]
     print 'loaded file'
 
     print 'loading to database'
@@ -116,7 +117,7 @@ def load_from_pitchbook(csvfile, engine):
                 s.add(record) #Add all the records
         except:
             print 'error in: ' + str(i) + ', ' + data[i][1] + ':' + traceback.format_exc()
-        if (i % 1000 == 0 or i == len(data) - 1):
+        if i % 1000 == 0 or i == len(data) - 1:
             print 'index: ' + str(i)
     print 'committing'
     try:

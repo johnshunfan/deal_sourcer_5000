@@ -77,17 +77,23 @@ def calculate_growth(months, sales):
     Input should all begin on the same month. If there is a data set with a 0,
     return 0 for all subsequent growth numbers.
     """
-    end = len(months)
     growth = [0, 0, 0, 0]
-    milestones = [0, 3, 6, 10]
-    g_sum = 0;
-    for i in range(11):
-        if (sales[i] == 0 or sales[i+1] == 0):
-            break
-        else:
-            g_sum += ((sales[i] - sales[i+1]) / float(sales[i+1])) * 100
-        if i in milestones:
-            growth[milestones.index(i)] = format(g_sum / float(i+1), '.0f')
+    growth[0] = (
+        format(sales[0] - sales[1] / float(sales[1]) * 100), '.0f')
+        if sales[1] != 0
+        else 0)
+    growth[1] = (
+        format(sales[0] - sales[3] / float(sales[3]) * 100), '.0f')
+        if sales[3] != 0
+        else 0)
+    growth[2] = (
+        format(sales[0] - sales[6] / float(sales[6]) * 100), '.0f')
+        if sales[6] != 0
+        else 0)
+    growth[3] = (
+        format(sales[0] - sales[11] / float(sales[11]) * 100), '.0f')
+        if sales[11] != 0
+        else 0)
     return growth
 
 def combine_with_growth(connection):
