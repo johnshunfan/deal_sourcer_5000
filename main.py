@@ -45,12 +45,31 @@ def set_interest():
 
     # Get matching company
     connection = engine.connect()
-    result = connection.execute('SELECT * FROM companies WHERE id={0}'
-        .format(row_id))
-    connection.close()
-
-    for company in result:
-        connection = engine.connect()
+    company = connection.execute('SELECT * FROM companies WHERE id={0}'
+                                 .format(row_id)).fetchone()
+    result = connection.execute(
+        '''
+        SELECT *
+        FROM comments
+        WHERE company_name='{0}'
+            AND company_website='{1}'
+        '''.format(company.company_name,
+                   company.company_website))
+    if result.rowcount == 0:
+        result = connection.execute(
+            '''
+            INSERT INTO comments (company_name, company_website, interest)
+            VALUES ('{0}', '{1}', '{2}')
+            '''.format(company.company_name,
+                       company.company_website,
+                       interest))
+    else:
+        row = result.fetchone()
+        existing_interest = row.interest
+        if interest in existing_interest:
+            interest = existing_interest.replace(interest, '')
+        else:
+            interest = existing_interest + interest
         result = connection.execute(
             '''
             UPDATE comments
@@ -60,15 +79,7 @@ def set_interest():
             '''.format(interest,
                        company.company_name,
                        company.company_website))
-        if result.rowcount == 0:
-            result = connection.execute(
-                '''
-                INSERT INTO comments (company_name, company_website, interest)
-                VALUES ('{0}', '{1}', '{2}')
-                '''.format(company.company_name,
-                           company.company_website,
-                           interest))
-        connection.close()
+    connection.close()
 
     return row_id + ', ' + interest
 
@@ -84,7 +95,7 @@ def set_comment():
     # Get matching company
     connection = engine.connect()
     result = connection.execute('SELECT * FROM companies WHERE id={0}'
-        .format(row_id))
+                                .format(row_id))
     connection.close()
 
     for company in result:

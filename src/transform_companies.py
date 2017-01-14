@@ -180,7 +180,7 @@ def dedupe_companies(connection):
     company_dict = {}
     print 'query returned'
     for company in result:
-        print str(company)
+        #print str(company)
         cw = company.company_website
         if cw is None:
             cw = company.company_name
@@ -188,27 +188,43 @@ def dedupe_companies(connection):
         if cw in company_dict:
             # delete one if it's a double
             print 'already found ' + cw
-            if company.online_profile_url.find('pitchbook') != -1:
+            #print str(company_dict[cw])
+            if 'pitchbook' in company.online_profile_url:
+                # new company has pitchbook
                 print company.online_profile_url + ' contains pitchbook'
-                # if both current row and stored row are pitchbook
-                if (company_dict[cw].online_profile_url.find('pitchbook') != -1) \
-                        and (company_dict[cw].deal_date > company.deal_date):
-                    # if stored company has pitchbook, and is a later entry
-                    print 'deleting new ' + company.online_profile_url
-                    delete_company(company, connection)
+                if 'pitchbook' in company_dict[cw].online_profile_url:
+                    # old company has pitchbook
+                    if company_dict[cw].deal_date > company.deal_date:
+                        # old company has a newer deal date
+                        #print ('deleting new '
+                        #       + company.online_profile_url
+                        #       + ', id new:' + str(company.id)
+                        #       + ', id old:' + str(company_dict[cw].id))
+                        delete_company(company, connection)
+                    #elif company_dict[cw].deal_date < company.deal_date:
+                    else:
+                        # new company has a newer deal date or same
+                        #print ('deleting existing'
+                        #       + company_dict[cw].online_profile_url
+                        #       + ', id new:' + str(company.id)
+                        #       + ', id old:' + str(company_dict[cw].id))
+                        delete_company(company_dict[cw], connection)
                 else:
-                    print 'deleting existing ' + company_dict[cw].online_profile_url
+                    #print ('deleting existing '
+                    #       + company_dict[cw].online_profile_url
+                    #       + ' id:' + str(company_dict[cw].id))
                     delete_company(company_dict[cw], connection)
                     company_dict[cw] = company
             else:
-                print company.online_profile_url + ' does not contain pitchbook'
-                if (company_dict[cw].online_profile_url.find('pitchbook') == -1) \
-                        and (company_dict[cw].deal_date > company.deal_date):
-                    print 'deleting new ' + company.online_profile_url + ' old deal date: ' + str(company_dict[cw].deal_date) \
-                        + ' new deal date: ' + str(company.deal_date)
+                # new company does not contain pitchbook
+                #print company.online_profile_url + ' does not contain pitchbook'
+                if 'pitchbook' in company_dict[cw].online_profile_url:
+                    # old company contains pitchbook
+                    #print 'deleting new ' + company.online_profile_url
                     delete_company(company, connection)
                 else:
-                    print 'deleting existing ' + company_dict[cw].online_profile_url
+                    # old company doesn't contain pitchbook
+                    #print 'deleting existing ' + company_dict[cw].online_profile_url
                     delete_company(company_dict[cw], connection)
                     company_dict[cw] = company
         else:
@@ -241,17 +257,17 @@ SET x.interest_url=CONCAT('
                 <input type="hidden" name="row_id" value="', y.id,'"/>
                 <select name="interest">
                     <option value=""></option>
-                    <option value="AS">AS</option>
-                    <option value="AG">AG</option>
-                    <option value="CM">CM</option>
-                    <option value="JC">JC</option>
-                    <option value="JE">JE</option>
-                    <option value="JM">JM</option>
-                    <option value="MS">MS</option>
-                    <option value="PH">PH</option>
-                    <option value="RG">RG</option>
-                    <option value="SV">SV</option>
-                    <option value="ZN">ZN</option>
+                    <option value="AS ">AS</option>
+                    <option value="AG ">AG</option>
+                    <option value="CM ">CM</option>
+                    <option value="JC ">JC</option>
+                    <option value="JE ">JE</option>
+                    <option value="JM ">JM</option>
+                    <option value="MS ">MS</option>
+                    <option value="PH ">PH</option>
+                    <option value="RG ">RG</option>
+                    <option value="SV ">SV</option>
+                    <option value="ZN ">ZN</option>
                 </select>
                 <button onclick="doPreview(', y.id, ');">Submit</button>
             </form>
@@ -372,15 +388,6 @@ def transform_to_companies(load_cb=False, load_pb=False, engine=None):
                    g.one_month,
                    g.last_revenue
             FROM pb_rounds p
-            JOIN (
-                SELECT pbr.pitchbook_link,
-                       MAX(pbr.deal_date) as date,
-                       MAX(pbr.deal_size) as size
-                FROM pb_rounds pbr
-                GROUP BY pitchbook_link
-            ) pb
-            ON p.pitchbook_link = pb.pitchbook_link
-                AND p.deal_size = pb.size
             LEFT JOIN growth g
             ON p.company_website = g.domain
             '''
@@ -392,24 +399,12 @@ def transform_to_companies(load_cb=False, load_pb=False, engine=None):
 
         print 'transform companies: loading pb to database'
         for i in range(len(pb_data)):
-            print pb_data[i].company_name, \
-                pb_data[i].deal_date, \
-                pb_data[i].deal_size
-
+            #print pb_data[i].company_name, \
+            #    pb_data[i].deal_date, \
+            #    pb_data[i].deal_size
             try:
-                connection.close()
-                connection = engine.connect()
-                result = connection.execute(
-                        '''
-                        SELECT *
-                        FROM companies
-                        WHERE company_name="{0}"
-                            AND company_website='{1}'
-                        '''.format(pb_data[i].company_name,
-                                   pb_data[i].company_website))
-                if result.rowcount == 0:
-                    record = build_from_pb(pb_data[i], connection)
-                    s.add(record)
+                record = build_from_pb(pb_data[i], connection)
+                s.add(record)
             except:
                 print 'error in: ' \
                     + str(i) + ', ' + pb_data[i][1] + ':' \
@@ -431,17 +426,24 @@ def transform_to_companies(load_cb=False, load_pb=False, engine=None):
     connection = engine.connect()
     create_comment_url(connection)
 
+    print 'adding interest url'
+    connection.close()
+    connection = engine.connect()
+    create_interest_url(connection)
+    connection.close()
+
     s.close() #Close the connection
 
 if __name__ == "__main__":
     t = time()
 
     #Create the database
-    print 'connecting to mysql database'
-    config = ConfigParser.ConfigParser()
-    config.read('properties.ini')
-    engine = create_engine(config.get('properties', 'engine_string'))
+    engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
 
-    transform_to_companies(load_cb=True, load_pb=True, engine=engine)
+    transform_to_companies(load_cb=False, load_pb=True, engine=engine)
+
+    connection = engine.connect()
+    dedupe_companies(connection)
+    connection.close()
 
     print "Time elapsed: " + str(time() - t) + " s." #0.091s

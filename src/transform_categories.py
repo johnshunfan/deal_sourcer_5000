@@ -150,11 +150,8 @@ if __name__ == "__main__":
     t = time()
 
     #Create the database
-    print 'connecting to mysql database'
-    config = ConfigParser.ConfigParser()
-    config.read('properties.ini')
-    engine = create_engine(config.get('properties', 'engine_string'))
+    engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
 
-    transform_to_categories(load_cb=True, load_pb=True, engine=engine)
+    transform_to_categories(load_cb=False, load_pb=True, engine=engine)
 
     print "Time elapsed: " + str(time() - t) + " s." #0.091s

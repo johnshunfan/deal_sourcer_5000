@@ -64,7 +64,16 @@ def dedupe_pb_rounds(connection):
             '''
             DELETE a
             FROM pb_rounds a, pb_rounds b
-            WHERE (a.pitchbook_link = b.pitchbook_link) AND (a.id > b.id)
+            WHERE (a.pitchbook_link = b.pitchbook_link)
+                AND (a.deal_date < b.deal_date)
+            ''')
+        connection.execute(
+            '''
+            DELETE a
+            FROM pb_rounds a, pb_rounds b
+            WHERE (a.pitchbook_link = b.pitchbook_link)
+                AND (a.deal_date = b.deal_date)
+                AND (a.id < b.id)
             ''')
     except:
         print traceback.format_exc()
@@ -79,7 +88,7 @@ def load_from_pitchbook(csvfile, engine):
     s = session()
 
     print 'loading file'
-    rounds = csv.reader(csvfile)
+    rounds = [row for row in csv.reader(csvfile.read().splitlines())]
     # edit for different types of CSV
     data = list(rounds)[8:-3]
     print 'loaded file'
@@ -136,7 +145,22 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
-    with open('pitchbook_20161001_20161015.csv', 'rU') as csvfile:
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161001_20161015.csv', 'rU') as csvfile:
+        load_from_pitchbook(csvfile=csvfile, engine=engine)
+
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161016_20161031.csv', 'rU') as csvfile:
+        load_from_pitchbook(csvfile=csvfile, engine=engine)
+
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161101_20161115.csv', 'rU') as csvfile:
+        load_from_pitchbook(csvfile=csvfile, engine=engine)
+
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161116_20161130.csv', 'rU') as csvfile:
+        load_from_pitchbook(csvfile=csvfile, engine=engine)
+
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161201_20161215.csv', 'rU') as csvfile:
+        load_from_pitchbook(csvfile=csvfile, engine=engine)
+
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161216_20161231.csv', 'rU') as csvfile:
         load_from_pitchbook(csvfile=csvfile, engine=engine)
 
     connection = engine.connect()
