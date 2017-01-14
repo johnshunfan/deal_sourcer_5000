@@ -34,6 +34,44 @@ def connect_to_cloudsql_sqlalchemy_bak():
     engine = create_engine(connection_string)
     return engine
 
+@app.route('/interest', methods=['POST'])
+def set_interest():
+    interest = request.form['interest']
+    row_id = request.form['row_id']
+
+    # Create engine
+    engine = connect_to_cloudsql_sqlalchemy()
+    Base.metadata.create_all(engine)
+
+    # Get matching company
+    connection = engine.connect()
+    result = connection.execute('SELECT * FROM companies WHERE id={0}'
+        .format(row_id))
+    connection.close()
+
+    for company in result:
+        connection = engine.connect()
+        result = connection.execute(
+            '''
+            UPDATE comments
+            SET interest='{0}'
+            WHERE company_name='{1}'
+                AND company_website='{2}'
+            '''.format(interest,
+                       company.company_name,
+                       company.company_website))
+        if result.rowcount == 0:
+            result = connection.execute(
+                '''
+                INSERT INTO comments (company_name, company_website, interest)
+                VALUES ('{0}', '{1}', '{2}')
+                '''.format(company.company_name,
+                           company.company_website,
+                           interest))
+        connection.close()
+
+    return row_id + ', ' + interest
+
 @app.route('/comment', methods=['GET', 'POST'])
 def set_comment():
     comment = request.form['comment'][:1000]

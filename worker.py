@@ -37,6 +37,11 @@ class UpdateFcLeadsHandler(webapp2.RequestHandler):
 
         get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, engine=engine)
 
+        # combine companies with FC Leads
+        connection = engine.connect()
+        combine_with_fc_lead(connection)
+        connection.close()
+
         self.response.write('done')
 
 class LoadPbRoundsHandler(webapp2.RequestHandler):
@@ -81,7 +86,7 @@ class LoadPbRoundsHandler(webapp2.RequestHandler):
         dedupe_companies(connection)
         connection.close()
 
-        # combine with FC Leads
+        # combine companies with FC Leads
         connection = engine.connect()
         combine_with_fc_lead(connection)
         connection.close()
@@ -102,10 +107,17 @@ class LoadSmCsvHandler(webapp2.RequestHandler):
         result = connection.execute('DROP TABLE IF EXISTS sm_monthly_revenue')
         connection.close()
 
-        # transform second measure growth
+        # load second measure csv
         load_from_sm_csv(csvfile=new_file, engine=engine)
 
-        # combine with growth
+        connection = engine.connect()
+        result = connection.execute('DROP TABLE IF EXISTS growth')
+        connection.close()
+
+        # transform second measure growth
+        transform_to_sm_growth(engine)
+
+        # combine companies with growth
         connection = engine.connect()
         combine_with_growth(connection)
         connection.close()

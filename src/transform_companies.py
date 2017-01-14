@@ -221,6 +221,44 @@ def delete_company(company, connection):
         WHERE id={0}
         '''.format(company.id))
 
+def create_interest_url(connection):
+    result = connection.execute(
+        '''
+UPDATE companies x
+JOIN companies y
+    ON x.id = y.id
+SET x.interest_url=CONCAT('
+    <html>
+        <body>
+            <script type="text/javascript">
+                function doPreview(rowId) {
+                    form=document.getElementById("interest"+rowId);
+                    form.target="_blank";
+                    form.action="https://digital-proton-146222.appspot.com/interest"; form.submit();
+                }
+            </script>
+            <form id="interest', y.id, '" method="post">
+                <input type="hidden" name="row_id" value="', y.id,'"/>
+                <select name="interest">
+                    <option value=""></option>
+                    <option value="AS">AS</option>
+                    <option value="AG">AG</option>
+                    <option value="CM">CM</option>
+                    <option value="JC">JC</option>
+                    <option value="JE">JE</option>
+                    <option value="JM">JM</option>
+                    <option value="MS">MS</option>
+                    <option value="PH">PH</option>
+                    <option value="RG">RG</option>
+                    <option value="SV">SV</option>
+                    <option value="ZN">ZN</option>
+                </select>
+                <button onclick="doPreview(', y.id, ');">Submit</button>
+            </form>
+        </body>
+    </html>')
+        ''')
+
 def create_comment_url(connection):
     result = connection.execute(
         '''

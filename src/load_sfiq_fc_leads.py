@@ -21,7 +21,7 @@ requests_toolbelt.adapters.appengine.monkeypatch()
 def printJ(jData):
     print json.dumps(jData, indent=4, sort_keys=True)
 
-def getUserName(userId, API_KEY, API_SECRET):
+def get_user_name(userId, API_KEY, API_SECRET):
     getUserUrl = 'https://api.salesforceiq.com/v2/users/{userId}'
     getUserUrl = getUserUrl.replace('{userId}', userId)
     response = requests.get(getUserUrl, auth=(API_KEY, API_SECRET))
@@ -47,7 +47,7 @@ class FcLead(Base):
     fc_lead = Column(String(255))
     __table_args__ = (Index('name', 'name'), Index('fcl', 'fc_lead'))
 
-def get_fc_leads(fc_lead_dict, companies, session):
+def get_fc_leads(fc_lead_dict, companies, session, API_KEY, API_SECRET):
     s = session
     print 'looking up and loading'
     #companies = get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET)
@@ -58,7 +58,7 @@ def get_fc_leads(fc_lead_dict, companies, session):
         if not fc_lead_id in fc_lead_dict:
             print 'looking up ' + str(fc_lead_id)
             try:
-                fc_lead_dict[fc_lead_id] = getUserName(fc_lead_id, API_KEY, API_SECRET)
+                fc_lead_dict[fc_lead_id] = get_user_name(fc_lead_id, API_KEY, API_SECRET)
             except:
                 fc_lead_dict[fc_lead_id] = fc_lead_id
             print 'looking up ' + str(fc_lead_id) + ': ' + fc_lead_dict[fc_lead_id]
@@ -97,7 +97,7 @@ def combine_with_fc_lead(connection):
         INNER JOIN fc_leads fc
         ON c.company_website = fc.domain
             OR c.company_name = fc.name
-        SET c.fc_lead = fc.name
+        SET c.fc_lead = fc.fc_lead
         ''')
 
 def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
@@ -115,7 +115,10 @@ def get_all_list_items(list_id, API_KEY, API_SECRET, limit = 0, engine = None):
     while index <= size:
         print 'begin loading index: ' + str(index) + ' to: ' + str(index+200)
         data = select_list_items(list_id, index, 200, API_KEY, API_SECRET)
-        fc_lead_dict = get_fc_leads(fc_lead_dict, data, session=s)
+        fc_lead_dict = get_fc_leads(fc_lead_dict,
+                                    data, session=s,
+                                    API_KEY=API_KEY,
+                                    API_SECRET=API_SECRET)
         print 'finished loading index: ' + str(index) + ' to: ' + str(index+200)
         index += 200
     print 'completed all iterations of loading data'
@@ -134,5 +137,5 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
-    get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, engine=engine)
-
+    print get_user_name('570s19794e4b08cb4a836fd52', API_KEY, API_SECRET)
+    #get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, limit=5, engine=engine)

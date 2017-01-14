@@ -79,19 +79,19 @@ def calculate_growth(months, sales):
     """
     growth = [0, 0, 0, 0]
     growth[0] = (
-        format(sales[0] - sales[1] / float(sales[1]) * 100), '.0f')
+        format((sales[0] - sales[1]) / float(sales[1]) * 100, '.0f')
         if sales[1] != 0
         else 0)
     growth[1] = (
-        format(sales[0] - sales[3] / float(sales[3]) * 100), '.0f')
+        format((sales[0] - sales[3]) / float(sales[3]) * 100, '.0f')
         if sales[3] != 0
         else 0)
     growth[2] = (
-        format(sales[0] - sales[6] / float(sales[6]) * 100), '.0f')
+        format((sales[0] - sales[6]) / float(sales[6]) * 100, '.0f')
         if sales[6] != 0
         else 0)
     growth[3] = (
-        format(sales[0] - sales[11] / float(sales[11]) * 100), '.0f')
+        format((sales[0] - sales[11]) / float(sales[11]) * 100, '.0f')
         if sales[11] != 0
         else 0)
     return growth
