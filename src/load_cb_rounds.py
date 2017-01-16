@@ -6,16 +6,17 @@
 # how to make a string column
 # http://docs.sqlalchemy.org/en/latest/core/metadata.html#creating-and-dropping-database-tables
 import csv
-import ConfigParser
 import traceback
 import re
 from time import time
 from datetime import datetime
+
 from sqlalchemy import Boolean, Column, Integer, Float, DateTime, String, BigInteger, ForeignKey, Index
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sp_util import format_string, format_number, format_date, split_investors_cb, format_cb_usd_amt
+
+from sp_util import format_string, format_date, split_investors_cb, format_cb_usd_amt
 
 def Load_Data(file_name):
     with open(file_name, 'rU') as csvfile:
@@ -25,9 +26,7 @@ def Load_Data(file_name):
 Base = declarative_base()
 
 class CbRound(Base):
-    #Tell SQLAlchemy what the table name is and if there's any table-specific arguments it should know about
     __tablename__ = 'cb_rounds'
-    #tell SQLAlchemy the name of column and its attributes:
     id = Column(Integer, primary_key=True, nullable=False)
     company_name = Column(String(255))
     country_code = Column(String(255))
@@ -81,14 +80,7 @@ def build_object(data):
         'funding_round_uuid': data[22]
     })
 
-def load_from_crunchbase(file_name):
-    t = time()
-
-    #Create the database
-    print 'connecting to mysql database'
-    config = ConfigParser.ConfigParser()
-    config.read('properties.ini')
-    engine = create_engine(config.get('properties', 'engine_string'))
+def load_from_crunchbase(csvfile, engine):
     Base.metadata.create_all(engine)
 
     #Create the session
@@ -97,7 +89,9 @@ def load_from_crunchbase(file_name):
     s = session()
 
     print 'loading file'
-    data = Load_Data(file_name)
+    rounds = [row for row in csv.reader(csvfile.read().splitlines())]
+    # edit for different types of CSV
+    data = list(rounds)[1:]
     print 'loaded file'
 
     print 'loading to database'
@@ -123,7 +117,19 @@ def load_from_crunchbase(file_name):
                 break
 
     s.close() #Close the connection
-    print "Time elapsed: " + str(time() - t) + " s." #0.091s
 
 if __name__ == "__main__":
-    load_from_crunchbase('data/funding_rounds.csv')
+    t = time()
+
+    #Create the database
+    print 'connecting to mysql database'
+    engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
+
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS cb_rounds')
+    connection.close()
+
+    with open('../../1old_ds5000/data/funding_rounds.csv', 'rU') as csvfile:
+        load_from_crunchbase(csvfile=csvfile, engine=engine)
+
+    print "Time elapsed: " + str(time() - t) + " s." #0.091s

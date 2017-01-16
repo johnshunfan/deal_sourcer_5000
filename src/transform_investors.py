@@ -14,7 +14,7 @@ from sqlalchemy import Boolean, Column, Integer, Float, DateTime, String, BigInt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sp_util import format_string, format_number, format_date, split_investors_pb, split_investors_cb
+from sp_util import format_string, format_date, split_investors_pb, split_investors_cb
 from load_pb_rounds import PbRound
 from load_cb_rounds import CbRound
 from load_cb_companies import CbCompany
@@ -28,6 +28,7 @@ class CompanyInvestor(Base):
     domain = Column(String(255))
     investor = Column(String(255))
     online_profile_url = Column(String(255))
+    investor_count = Column(Integer)
     __table_args__ = (Index('name', 'name'),
                       Index('domain', 'domain'),
                       Index('investor', 'investor'),
@@ -66,6 +67,21 @@ def dedupe_investors(connection):
         print traceback.format_exc()
         return
 
+def load_counts(connection):
+    """ Load the amount of occurences for each investor. """
+    print 'loading investor counts'
+    connection.execute(
+            '''
+            UPDATE investors x
+            JOIN (
+                SELECT investor, count(*) AS count_investor
+                FROM investors i2
+                GROUP BY investor
+                ORDER BY count(*) DESC
+            ) n
+            ON x.investor = n.investor
+            SET x.investor_count = n.count_investor
+            ''')
 def transform_to_investors(load_pb=False, load_cb=False, engine=None):
     Base.metadata.create_all(engine)
 
@@ -143,6 +159,20 @@ if __name__ == "__main__":
     #Create the database
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
 
-    transform_to_investors(load_pb=True, load_cb=False, engine=engine)
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS investors')
+    connection.close()
+
+    transform_to_investors(load_pb=True, load_cb=True, engine=engine)
+
+    # de-duplicate categories
+    connection = engine.connect()
+    dedupe_investors(connection)
+    connection.close()
+
+    # load counts
+    connection = engine.connect()
+    load_counts(connection)
+    connection.close()
 
     print "Time elapsed: " + str(time() - t) + " s." #0.091s

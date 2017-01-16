@@ -16,7 +16,7 @@ from sqlalchemy import Boolean, Column, Integer, Float, DateTime, String, BigInt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sp_util import format_string, format_number, format_date
+from sp_util import format_string, format_date
 from load_sm_csv import SmMonthlyRevenue
 
 Base = declarative_base()

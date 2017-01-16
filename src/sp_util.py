@@ -6,6 +6,8 @@ import re
 from datetime import datetime
 import tldextract
 
+import us
+
 def format_domain(data):
     if data == '':
         return None
@@ -31,11 +33,19 @@ def format_string(data, length=255):
 def format_cb_usd_amt(data):
     i = format_number(data)
     if not i is None:
-        return format(i / float(1000000), '.2f')
+        return format(i / float(1000000), '.1f')
     return None
 
+def format_state(data):
+    """ Attempt to match a string as a US state."""
+    if us.states.lookup(data) is None:
+        return None
+    else:
+        return us.states.lookup(data).name
+
 def format_number(data):
-    """Format a crunchbase number for database storage.
+    """ Format a number as an integer for database storage.
+
     formats a number by removing:
     leading and trailing whitespace
     dollar signs
@@ -52,23 +62,23 @@ def format_number(data):
         return None
 
 def format_float(data):
-    """Format a float for database storage.
-    """
+    """Format data into a one decimal place float."""
     try:
-        return float(data)
+        return format(float(data), '.1f')
     except:
         return None
 
 def format_date(data, format_string='%Y-%m-%d'):
-    """Formats a crunchbase number for database storage.
-    """
-    if (data == ''):
+    """Formats a crunchbase number for database storage."""
+    if (data == '') or 'BC' in data:
         return None
     return datetime.strptime(data, format_string)
 
 def split_investors_pb(investor_string):
     """Format pitchbook investor strings.
-    takes an input such as: Adara Ventures (Alberto Gomez), Telefnica Ventures, Trident Capital Cybersecurity (Alberto Ypez)
+
+    takes an input such as: Adara Ventures (Alberto Gomez), Telefnica Ventures,
+    Trident Capital Cybersecurity (Alberto Ypez)
     turns it into an array
     returns a dict with an array
     """
@@ -84,6 +94,7 @@ def split_investors_pb(investor_string):
 
 def split_investors_cb(investor_string):
     """Format cb investor strings.
+
     takes an input such as Lead - Chrysalis Ventures, Lead - Arboretum Ventures
     turns it into an array
     returns a dict with 2 arrays: lead and other investors

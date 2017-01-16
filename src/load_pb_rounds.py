@@ -145,6 +145,10 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS pb_rounds')
+    connection.close()
+
     with open('../../1old_ds5000/data/pitchbook/pitchbook_20161001_20161015.csv', 'rU') as csvfile:
         load_from_pitchbook(csvfile=csvfile, engine=engine)
 
@@ -157,11 +161,11 @@ if __name__ == "__main__":
     with open('../../1old_ds5000/data/pitchbook/pitchbook_20161116_20161130.csv', 'rU') as csvfile:
         load_from_pitchbook(csvfile=csvfile, engine=engine)
 
-    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161201_20161215.csv', 'rU') as csvfile:
-        load_from_pitchbook(csvfile=csvfile, engine=engine)
+    #with open('../../1old_ds5000/data/pitchbook/pitchbook_20161201_20161215.csv', 'rU') as csvfile:
+    #    load_from_pitchbook(csvfile=csvfile, engine=engine)
 
-    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161216_20161231.csv', 'rU') as csvfile:
-        load_from_pitchbook(csvfile=csvfile, engine=engine)
+    #with open('../../1old_ds5000/data/pitchbook/pitchbook_20161216_20161231.csv', 'rU') as csvfile:
+    #    load_from_pitchbook(csvfile=csvfile, engine=engine)
 
     connection = engine.connect()
     dedupe_pb_rounds(connection)

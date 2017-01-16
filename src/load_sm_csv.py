@@ -16,7 +16,7 @@ from sqlalchemy import Boolean, Column, Integer, Float, DateTime, String, BigInt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sp_util import format_string, format_number, format_date, format_domain
+from sp_util import format_string, format_date, format_domain
 
 Base = declarative_base()
 

@@ -7,27 +7,22 @@
 # how to make a string column
 # http://docs.sqlalchemy.org/en/latest/core/metadata.html#creating-and-dropping-database-tables
 import csv
-import ConfigParser
 import traceback
 import re
 from datetime import datetime
 from time import time
-from sqlalchemy import Column, BigInteger, Integer, Float, DateTime, String, Index
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sp_util import format_string, format_number, format_date, format_cb_usd_amt, format_domain
 
-def Load_Data(file_name):
-    with open(file_name, 'rU') as csvfile:
-        rounds = csv.reader(csvfile)
-        return list(rounds)[1:]
+from sqlalchemy import Column, BigInteger, Integer, Float, DateTime, String, Index
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from sp_util import format_string, format_number, format_date, format_cb_usd_amt, format_domain
 
 Base = declarative_base()
 
 class CbCompany(Base):
     __tablename__ = 'cb_companies'
-    #tell SQLAlchemy the name of column and its attributes:
     id = Column(Integer, primary_key=True, nullable=False)
     company_name = Column(String(255))
     domain = Column(String(255))
@@ -52,34 +47,27 @@ class CbCompany(Base):
 def create_object(data):
     record = CbCompany(**{
         'company_name':format_string(data[0]),
-        'domain':format_domain(data[2]),
-        'country_code':data[4],
-        'state_code':data[5],
-        'region':format_string(data[6]),
-        'city':format_string(data[7]),
-        'status':data[10],
-        'short_description':format_string(data[11], 1000),
-        'category_list':data[12],
-        'category_group_list':data[13],
-        'funding_rounds':format_number(data[14]),
-        'funding_total_usd':format_cb_usd_amt(data[15]),
-        'founded_on':format_date(data[16]),
-        'first_funding_on':format_date(data[17]),
-        'last_funding_on':format_date(data[18]),
-        'closed_on':format_date(data[19]),
-        'employee_count':data[20],
-        'cb_url':format_string(data[25]),
+        'domain':format_domain(data[3]),
+        'country_code':data[5],
+        'state_code':data[6],
+        'region':format_string(data[7]),
+        'city':format_string(data[8]),
+        'status':data[11],
+        'short_description':format_string(data[12], 1000),
+        'category_list':data[13],
+        'category_group_list':data[14],
+        'funding_rounds':format_number(data[15]),
+        'funding_total_usd':format_cb_usd_amt(data[16]),
+        'founded_on':format_date(data[17]),
+        'first_funding_on':format_date(data[18]),
+        'last_funding_on':format_date(data[19]),
+        'closed_on':format_date(data[20]),
+        'employee_count':data[21],
+        'cb_url':format_string(data[26]),
     })
     return record
 
-def load_from_crunchbase(file_name):
-    t = time()
-
-    #Create the database
-    print 'connecting to mysql database'
-    config = ConfigParser.ConfigParser()
-    config.read('properties.ini')
-    engine = create_engine(config.get('properties', 'engine_string'))
+def load_from_crunchbase(csvfile, engine):
     Base.metadata.create_all(engine)
 
     #Create the session
@@ -88,18 +76,20 @@ def load_from_crunchbase(file_name):
     s = session()
 
     print 'loading file'
-    data = Load_Data(file_name)
+    rounds = [row for row in csv.reader(csvfile.read().splitlines())]
+    # edit for different types of CSV
+    data = list(rounds)[1:]
     print 'loaded file'
-
+    print data[1]
     print 'loading to database'
     for i in range(0, len(data)):
     #for i in range(0, 5):
         try:
-            last_funding_date = format_date(data[i][18])
+            last_funding_date = format_date(data[i][19])
             if not (last_funding_date is None) \
-                and (data[i][4] == 'USA') \
+                and (data[i][5] == 'USA') \
                 and (data[i][1] == 'company') \
-                and (data[i][10] == 'operating' or data[i][10] == 'ipo'): # \
+                and (data[i][11] == 'operating' or data[i][11] == 'ipo'): # \
                 # and (last_funding_date < datetime.strptime('2016-10-01', '%Y-%m-%d')) \
                 # and (last_funding_date > datetime.strptime('2013-10-01', '%Y-%m-%d')):
                 record = create_object(data[i])
@@ -117,7 +107,19 @@ def load_from_crunchbase(file_name):
                 break
 
     s.close() #Close the connection
-    print "Time elapsed: " + str(time() - t) + " s." #0.091s
 
 if __name__ == "__main__":
-    load_from_crunchbase('data/organizations.csv')
+    t = time()
+
+    #Create the database
+    print 'connecting to mysql database'
+    engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
+
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS cb_companies')
+    connection.close()
+
+    with open('../../1old_ds5000/data/organizations.csv', 'rU') as csvfile:
+        load_from_crunchbase(csvfile=csvfile, engine=engine)
+
+    print "Time elapsed: " + str(time() - t) + " s." #0.091s

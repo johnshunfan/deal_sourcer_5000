@@ -6,14 +6,14 @@ import sys
 from time import time
 import traceback
 
-from sqlalchemy import Column, BigInteger, Integer, Float, DateTime, String, Index
+from sqlalchemy import create_engine, Column, BigInteger, Integer, Float, \
+        DateTime, String, Index
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from load_cb_rounds import CbRound
 from load_pb_rounds import PbRound
-from sp_util import format_string, format_number, format_date
+from sp_util import format_date, format_state, format_string
 
 Base = declarative_base()
 
@@ -40,6 +40,8 @@ class Company(Base):
     last_month_revenue = Column(Float())
     fc_lead = Column(String(255))
     comment_url = Column(String(1023))
+    interest_url = Column(String(1535))
+    state = Column(String(255))
     __table_args__ = (
             Index('name', 'company_name'),
             Index('domain', 'company_website'),
@@ -48,7 +50,7 @@ class Company(Base):
             Index('fcl', 'fc_lead'))
 
 def build_from_cb(data, connection):
-    # get all categories in a neatly formatted list
+    """ Build a model from crunchbase data. """
     result = connection.execute(
             '''
             SELECT GROUP_CONCAT(
@@ -68,8 +70,8 @@ def build_from_cb(data, connection):
             '''
             SELECT GROUP_CONCAT(
                 DISTINCT i.investor
-                ORDER BY i.investor
-                ASC SEPARATOR ', ') AS investors
+                ORDER BY i.investor_count
+                DESC SEPARATOR ', ') AS investors
             FROM investors i
             WHERE i.domain = '{0}'
             '''.format(data.domain)
@@ -92,11 +94,12 @@ def build_from_cb(data, connection):
         'deal_type': data.funding_round_type,
         'online_profile_url': data.cb_url,
         'revenue_growth_1mo':data.one_month,
-        'last_month_revenue':data.last_revenue
+        'last_month_revenue':data.last_revenue,
+        'state':format_state(data.state_code)
     })
 
 def build_from_pb(data, connection):
-    # get all categories in a neatly formatted list
+    """ Build a model from pitchbook data. """
     result = connection.execute(
             '''
             SELECT GROUP_CONCAT(
@@ -116,8 +119,8 @@ def build_from_pb(data, connection):
             '''
             SELECT GROUP_CONCAT(
                 DISTINCT i.investor
-                ORDER BY i.investor
-                ASC SEPARATOR ', ') AS investors
+                ORDER BY i.investor_count
+                DESC SEPARATOR ', ') AS investors
             FROM investors i
             WHERE i.domain = '{0}'
             '''.format(data.company_website)
@@ -126,7 +129,6 @@ def build_from_pb(data, connection):
     if not result is None:
         investors = result.fetchone().investors
 
-    # TODO make field null if they are ''
     # build object
     return Company(**{
         'company_name': data.company_name,
@@ -146,7 +148,8 @@ def build_from_pb(data, connection):
         'deal_type': data.deal_type,
         'online_profile_url': data.pitchbook_link,
         'revenue_growth_1mo':data.one_month,
-        'last_month_revenue':data.last_revenue
+        'last_month_revenue':data.last_revenue,
+        'state':data.company_state_province
         })
 
 def dedupe_companies(connection):
@@ -440,7 +443,11 @@ if __name__ == "__main__":
     #Create the database
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
 
-    transform_to_companies(load_cb=False, load_pb=True, engine=engine)
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS companies')
+    connection.close()
+
+    transform_to_companies(load_cb=True, load_pb=True, engine=engine)
 
     connection = engine.connect()
     dedupe_companies(connection)

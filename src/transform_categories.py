@@ -15,7 +15,7 @@ from sqlalchemy import Boolean, Column, Integer, Float, DateTime, String, BigInt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sp_util import format_string, format_number, format_date
+from sp_util import format_string, format_date
 from load_cb_companies import CbCompany
 from load_pb_rounds import PbRound
 
@@ -152,6 +152,15 @@ if __name__ == "__main__":
     #Create the database
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
 
-    transform_to_categories(load_cb=False, load_pb=True, engine=engine)
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS categories')
+    connection.close()
+
+    transform_to_categories(load_cb=True, load_pb=True, engine=engine)
+
+    # de-duplicate categories
+    connection = engine.connect()
+    dedupe_categories(connection)
+    connection.close()
 
     print "Time elapsed: " + str(time() - t) + " s." #0.091s
