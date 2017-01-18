@@ -6,13 +6,12 @@
 # how to make a string column
 # http://docs.sqlalchemy.org/en/latest/core/metadata.html#creating-and-dropping-database-tables
 import csv
-import ConfigParser
 import traceback
 import re
 from time import time
-from sqlalchemy import Column, BigInteger, Integer, Float, DateTime, String, Index
+from sqlalchemy import create_engine, Column, BigInteger, Integer, Float, \
+    DateTime, String, Index
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sp_util import format_string, format_number, format_date, format_float, format_domain
 
@@ -48,13 +47,6 @@ class PbRound(Base):
     __table_args__ = (
         Index('company_id', 'company_name'),
         Index('company_website', 'company_website'))
-
-def delete_old_table(table_name, connection):
-    connection.execute(
-        '''
-        drop table {0}
-        '''.format(table_name)
-    )
 
 def dedupe_pb_rounds(connection):
     '''Execute sql to delete duplicates in pb_rounds'''

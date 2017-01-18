@@ -17,36 +17,52 @@ from sp_util import format_date, format_state, format_string
 
 Base = declarative_base()
 
+class Comment(Base):
+    __tablename__ = 'comments'
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    company_name = Column(String(255))
+    company_website = Column(String(255))
+    comment = Column(String(1023))
+    interest = Column(String(255))
+
 class Company(Base):
     __tablename__ = 'companies'
+
     id = Column(Integer, primary_key=True, nullable=False)
     company_name = Column(String(255))
     primary_industry_group = Column(String(255))
     all_industries = Column(String(255))
     description = Column(String(1023))
-    raised_to_date = Column(Float())
+    raised_to_date = Column(Float)
     primary_industry_sector = Column(String(255))
     industry_vertical = Column(String(255))
-    current_employees = Column(Integer())
+    current_employees = Column(Integer)
     company_website = Column(String(255))
     deal_date = Column(DateTime)
-    deal_size = Column(Float())
-    post_valuation = Column(Float())
+    deal_size = Column(Float)
+    post_valuation = Column(Float)
     investors = Column(String(1023))
     series = Column(String(255))
     deal_type = Column(String(255))
     online_profile_url = Column(String(255))
-    revenue_growth_1mo = Column(Float())
-    last_month_revenue = Column(Float())
+    revenue_growth_1mo = Column(Float)
+    last_month_revenue = Column(Float)
     fc_lead = Column(String(255))
     comment_url = Column(String(1023))
     interest_url = Column(String(1535))
     state = Column(String(255))
+    mau_growth1 = Column(Float)
+    mau_growth3 = Column(Float)
+    mau = Column(BigInteger)
+
     __table_args__ = (
             Index('name', 'company_name'),
             Index('domain', 'company_website'),
             Index('deal', 'deal_date', 'deal_size'),
             Index('last', 'last_month_revenue'),
+            Index('rev_growth', 'revenue_growth_1mo'),
+            Index('mau_growth1', 'mau_growth1'),
             Index('fcl', 'fc_lead'))
 
 def build_from_cb(data, connection):
@@ -95,7 +111,10 @@ def build_from_cb(data, connection):
         'online_profile_url': data.cb_url,
         'revenue_growth_1mo':data.one_month,
         'last_month_revenue':data.last_revenue,
-        'state':format_state(data.state_code)
+        'state':format_state(data.state_code),
+        'mau_growth1':data.mau_growth1,
+        'mau_growth3':data.mau_growth3,
+        'mau':data.mau
     })
 
 def build_from_pb(data, connection):
@@ -149,7 +168,10 @@ def build_from_pb(data, connection):
         'online_profile_url': data.pitchbook_link,
         'revenue_growth_1mo':data.one_month,
         'last_month_revenue':data.last_revenue,
-        'state':data.company_state_province
+        'state':data.company_state_province,
+        'mau_growth1':data.mau_growth1,
+        'mau_growth3':data.mau_growth3,
+        'mau':data.mau
         })
 
 def dedupe_companies(connection):
@@ -317,15 +339,18 @@ def transform_to_companies(load_cb=False, load_pb=False, engine=None):
         result = connection.execute(
             '''
             SELECT DISTINCT
-                            c.*,
-                            cbr.funding_round_type,
-                            cbr.funding_round_code,
-                            cbr.announced_on,
-                            cbr.raised_amount_usd,
-                            cbr.post_money_valuation_usd,
-                            cbr.investor_names,
-                            g.one_month,
-                            g.last_revenue
+                c.*,
+                cbr.funding_round_type,
+                cbr.funding_round_code,
+                cbr.announced_on,
+                cbr.raised_amount_usd,
+                cbr.post_money_valuation_usd,
+                cbr.investor_names,
+                g.one_month,
+                g.last_revenue,
+                a.mau_growth1,
+                a.mau_growth3,
+                a.mau
             FROM cb_companies c
             JOIN (
                 SELECT cbr2.*
@@ -350,6 +375,8 @@ def transform_to_companies(load_cb=False, load_pb=False, engine=None):
             ON c.cb_url = cbr.cb_url
             LEFT JOIN growth g
             ON c.domain = g.domain
+            LEFT JOIN aa_growth a
+            ON c.company_name = a.name
             '''
         )
 
@@ -389,10 +416,15 @@ def transform_to_companies(load_cb=False, load_pb=False, engine=None):
             '''
             SELECT p.*,
                    g.one_month,
-                   g.last_revenue
+                   g.last_revenue,
+                   a.mau_growth1,
+                   a.mau_growth3,
+                   a.mau
             FROM pb_rounds p
             LEFT JOIN growth g
             ON p.company_website = g.domain
+            LEFT JOIN aa_growth a
+            ON p.company_name = a.name
             '''
         )
 

@@ -16,7 +16,8 @@ from sp_util import format_string, format_date
 
 # Use the App Engine Requests adapter. This makes sure that Requests uses
 # URLFetch.
-requests_toolbelt.adapters.appengine.monkeypatch()
+if __name__ != "__main__":
+    requests_toolbelt.adapters.appengine.monkeypatch()
 
 def printJ(jData):
     print json.dumps(jData, indent=4, sort_keys=True)
@@ -137,5 +138,5 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
-    print get_user_name('570s19794e4b08cb4a836fd52', API_KEY, API_SECRET)
-    #get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, limit=5, engine=engine)
+    #print get_user_name('570s19794e4b08cb4a836fd52', API_KEY, API_SECRET)
+    get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, engine=engine)

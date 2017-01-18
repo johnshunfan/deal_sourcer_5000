@@ -83,7 +83,7 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
-    with open('data/sales_monthly.csv', 'rU') as csvfile:
+    with open('../../1old_ds5000/data/sales_monthly_3.csv', 'rU') as csvfile:
         load_from_sm_csv(csvfile=csvfile, engine=engine)
 
     print "Time elapsed: " + str(time() - t) + " s." #0.091s

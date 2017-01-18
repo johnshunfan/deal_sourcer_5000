@@ -74,6 +74,11 @@ def format_date(data, format_string='%Y-%m-%d'):
         return None
     return datetime.strptime(data, format_string)
 
+def format_aa_date(data, format_string='%Y-%m'):
+    """Formats an App Annie period as a date."""
+    raw_date = data.split('~')[0]
+    return datetime.strptime(raw_date, format_string)
+
 def split_investors_pb(investor_string):
     """Format pitchbook investor strings.
 

@@ -151,4 +151,10 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS growth')
+    connection.close()
+
     transform_to_sm_growth(engine=engine)
+
+    print "Time elapsed: " + str(time() - t) + " s." #0.091s
