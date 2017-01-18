@@ -81,7 +81,7 @@ def set_interest():
                        company.company_website))
     connection.close()
 
-    return row_id + ', ' + interest
+    return 'interest: ' + row_id + ', ' + interest
 
 @app.route('/comment', methods=['GET', 'POST'])
 def set_comment():
@@ -119,7 +119,7 @@ def set_comment():
                            comment))
         connection.close()
 
-    return row_id + ', ' + comment
+    return 'comment: ' + row_id + ', ' + comment
 
 @app.route('/refresh_newco', methods=['GET'])
 def refresh_newco():
@@ -128,28 +128,35 @@ def refresh_newco():
         target='worker')
     return 'done'
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def upload_files():
-    if request.method == 'GET':
-        # Serve static upload form
-        return '''
-            <!doctype html>
-            Pitchbook
-            <form action="/load_file"
-                    method="post" enctype="multipart/form-data">
-                <input type="hidden" name="destination" value="/load_pb_rounds"/>
-                <input type="file" name="file"/>
-                <input type="submit" value="Upload" />
-            </form>
-            <br/>
-            Second Measure
-            <form action="/load_file"
-                    method="post" enctype="multipart/form-data">
-                <input type="hidden" name="destination" value="/load_sm_csv"/>
-                <input type="file" name="file"/>
-                <input type="submit" value="Upload" />
-            </form>
-            '''
+    # Serve static upload form
+    return '''
+        <!doctype html>
+        Pitchbook
+        <form action="/load_file"
+                method="post" enctype="multipart/form-data">
+            <input type="hidden" name="destination" value="/load_pb_rounds"/>
+            <input type="file" name="file"/>
+            <input type="submit" value="Upload" />
+        </form>
+        <br/>
+        Second Measure
+        <form action="/load_file"
+                method="post" enctype="multipart/form-data">
+            <input type="hidden" name="destination" value="/load_sm_csv"/>
+            <input type="file" name="file"/>
+            <input type="submit" value="Upload" />
+        </form>
+        <br/>
+        App Annie
+        <form action="/load_file"
+                method="post" enctype="multipart/form-data">
+            <input type="hidden" name="destination" value="/load_app_annie"/>
+            <input type="file" name="file"/>
+            <input type="submit" value="Upload" />
+        </form>
+        '''
 
 @app.route('/load_file', methods=['POST'])
 def begin_update_pb_rounds():

@@ -178,6 +178,8 @@ def load_from_aa(csvfile, engine):
 
 def transform_aa_growth(engine):
     """ Calculate App Annie growth from database."""
+    Base.metadata.create_all(engine)
+
     #Create the session
     session = sessionmaker()
     session.configure(bind=engine)
@@ -238,8 +240,6 @@ if __name__ == "__main__":
     connection = engine.connect()
     result = connection.execute('DROP TABLE IF EXISTS aa_months')
     connection.close()
-
-    Base.metadata.create_all(engine)
 
     with open('../../1old_ds5000/data/App_Annie_Usage_Intelligence_Top_Usage_iPhone_United States_Applications_2016-09-01_2016-12-31.csv', 'rU') as csvfile:
         load_from_aa(csvfile=csvfile, engine=engine)

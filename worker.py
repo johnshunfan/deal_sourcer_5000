@@ -4,9 +4,11 @@ import cloudstorage as gcs
 from sqlalchemy import create_engine
 import webapp2
 
+from src.load_app_annie import load_from_aa, dedupe_aa_months, \
+    transform_aa_growth
+from src.load_pb_rounds import load_from_pitchbook, dedupe_pb_rounds
 from src.load_sfiq_fc_leads import get_all_list_items, combine_with_fc_lead
 from src.load_sm_csv import load_from_sm_csv
-from src.load_pb_rounds import load_from_pitchbook, dedupe_pb_rounds
 from src.transform_categories import transform_to_categories, dedupe_categories
 from src.transform_companies import transform_to_companies, dedupe_companies
 from src.transform_investors import transform_to_investors, dedupe_investors
@@ -43,6 +45,32 @@ class UpdateFcLeadsHandler(webapp2.RequestHandler):
         connection.close()
 
         self.response.write('done')
+
+class LoadAppAnnieHandler(webapp2.RequestHandler):
+    def post(self):
+        # retrieve file
+        filename = self.request.get('filename')
+        filename = '/ds5000/' + filename
+        new_file = gcs.open(filename)
+
+        # create engine
+        engine = connect_to_cloudsql_sqlalchemy()
+
+        # load app annie months
+        load_from_aa(csvfile=filename, engine=engine)
+
+        # remove duplicates
+        connection = engine.connect()
+        dedupe_aa_months(connection)
+        connection.close()
+
+        # remove old growth table
+        connection = engine.connect()
+        result = connection.execute('DROP TABLE IF EXISTS aa_growth')
+        connection.close()
+
+        # transform app annie growth
+        transform_aa_growth(engine)
 
 class LoadPbRoundsHandler(webapp2.RequestHandler):
     def post(self):
@@ -124,6 +152,7 @@ class LoadSmCsvHandler(webapp2.RequestHandler):
 
         self.response.write('done')
 
+
 class TransformSmGrowthHandler(webapp2.RequestHandler):
     def post(self):
         # create engine
@@ -139,8 +168,9 @@ class TransformSmGrowthHandler(webapp2.RequestHandler):
         self.response.write('done')
 
 app = webapp2.WSGIApplication([
-    ('/update_fc_leads', UpdateFcLeadsHandler),
+    ('/load_app_annie', LoadAppAnnieHandler),
     ('/load_pb_rounds', LoadPbRoundsHandler),
     ('/load_sm_csv', LoadSmCsvHandler),
     ('/transform_sm_growth', TransformSmGrowthHandler),
+    ('/update_fc_leads', UpdateFcLeadsHandler),
 ], debug=True)

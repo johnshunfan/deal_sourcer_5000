@@ -153,13 +153,14 @@ if __name__ == "__main__":
     with open('../../1old_ds5000/data/pitchbook/pitchbook_20161116_20161130.csv', 'rU') as csvfile:
         load_from_pitchbook(csvfile=csvfile, engine=engine)
 
-    #with open('../../1old_ds5000/data/pitchbook/pitchbook_20161201_20161215.csv', 'rU') as csvfile:
-    #    load_from_pitchbook(csvfile=csvfile, engine=engine)
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161201_20161215.csv', 'rU') as csvfile:
+        load_from_pitchbook(csvfile=csvfile, engine=engine)
 
-    #with open('../../1old_ds5000/data/pitchbook/pitchbook_20161216_20161231.csv', 'rU') as csvfile:
-    #    load_from_pitchbook(csvfile=csvfile, engine=engine)
+    with open('../../1old_ds5000/data/pitchbook/pitchbook_20161216_20161231.csv', 'rU') as csvfile:
+        load_from_pitchbook(csvfile=csvfile, engine=engine)
 
     connection = engine.connect()
     dedupe_pb_rounds(connection)
     connection.close()
+
     print "Time elapsed: " + str(time() - t) + " s." #0.091s

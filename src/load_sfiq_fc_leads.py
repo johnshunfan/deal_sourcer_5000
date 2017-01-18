@@ -2,17 +2,17 @@
 
 # load all of salesforce IQ fc leads into the database
 import csv
+import json
 import re
 import requests
-import requests_toolbelt.adapters.appengine
-import traceback
-import json
 from time import time
-from sqlalchemy import Column, BigInteger, Integer, Float, DateTime, String, Index
+import traceback
+
+import requests_toolbelt.adapters.appengine
+from sqlalchemy import create_engine, BigInteger, Column, DateTime, Float, \
+    Index, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sp_util import format_string, format_date
 
 # Use the App Engine Requests adapter. This makes sure that Requests uses
 # URLFetch.
@@ -41,11 +41,12 @@ Base = declarative_base()
 
 class FcLead(Base):
     __tablename__ = 'fc_leads'
-    #tell SQLAlchemy the name of column and its attributes:
+
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(255))
     domain = Column(String(255))
     fc_lead = Column(String(255))
+
     __table_args__ = (Index('name', 'name'), Index('fcl', 'fc_lead'))
 
 def get_fc_leads(fc_lead_dict, companies, session, API_KEY, API_SECRET):
@@ -70,22 +71,17 @@ def get_fc_leads(fc_lead_dict, companies, session, API_KEY, API_SECRET):
             domain = ''
         try:
             record = FcLead(**{
-                'name':companies['objects'][i]['name'],
+                'name':companies['objects'][i]['name'].encode('utf-8'),
                 'domain':domain,
                 'fc_lead':fc_lead_str,
             })
             s.add(record) #Add all the records
+            s.commit()
         except:
+            s.rollback() #Rollback the changes on error
             print 'error in: ' + str(i) + ', ' + companies['objects'][i]['name'] + ':' + traceback.format_exc()
         if (i % 1000 == 0 or i == len(companies['objects']) - 1):
             print 'index: ' + str(i)
-            # if can't commit, then rollback
-            try:
-                s.commit()
-            except:
-                s.rollback() #Rollback the changes on error
-                print 'Unexpected error on index ' + str(i) + ':' + traceback.format_exc()
-                break
 
     print 'loaded data'
     return fc_lead_dict
@@ -138,5 +134,16 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS fc_leads')
+    connection.close()
+
     #print get_user_name('570s19794e4b08cb4a836fd52', API_KEY, API_SECRET)
     get_all_list_items(NEWCO_LIST_ID, API_KEY, API_SECRET, engine=engine)
+
+    # combine companies with FC Leads
+    connection = engine.connect()
+    combine_with_fc_lead(connection)
+    connection.close()
+
+    print "Time elapsed: " + str(time() - t) + " s." #0.091s

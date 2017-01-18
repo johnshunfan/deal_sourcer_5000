@@ -83,6 +83,10 @@ if __name__ == "__main__":
     engine = create_engine('mysql://root@127.0.0.1/test3?charset=utf8mb4')
     Base.metadata.create_all(engine)
 
+    connection = engine.connect()
+    result = connection.execute('DROP TABLE IF EXISTS sm_monthly_revenue')
+    connection.close()
+
     with open('../../1old_ds5000/data/sales_monthly_3.csv', 'rU') as csvfile:
         load_from_sm_csv(csvfile=csvfile, engine=engine)
 

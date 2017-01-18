@@ -272,7 +272,7 @@ SET x.interest_url=CONCAT('
     <html>
         <body>
             <script type="text/javascript">
-                function doPreview(rowId) {
+                function doInterest(rowId) {
                     form=document.getElementById("interest"+rowId);
                     form.target="_blank";
                     form.action="https://digital-proton-146222.appspot.com/interest"; form.submit();
@@ -294,7 +294,7 @@ SET x.interest_url=CONCAT('
                     <option value="SV ">SV</option>
                     <option value="ZN ">ZN</option>
                 </select>
-                <button onclick="doPreview(', y.id, ');">Submit</button>
+                <button onclick="doInterest(', y.id, ');">Submit</button>
             </form>
         </body>
     </html>')
@@ -310,7 +310,7 @@ SET x.comment_url=CONCAT('
     <html>
         <body>
             <script type="text/javascript">
-                function doPreview(rowId) {
+                function doComment(rowId) {
                     form=document.getElementById("form"+rowId);
                     form.target="_blank";
                     form.action="https://digital-proton-146222.appspot.com/comment"; form.submit();
@@ -319,7 +319,7 @@ SET x.comment_url=CONCAT('
             <form id="form', y.id, '" method="post">
                 <input type="hidden" name="row_id" value="', y.id,'"/>
                 <input type="text" name="comment" value="new comment"/>
-                <button onclick="doPreview(', y.id, ');">Submit</button>
+                <button onclick="doComment(', y.id, ');">Submit</button>
             </form>
         </body>
     </html>')
