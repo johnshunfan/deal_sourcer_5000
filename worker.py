@@ -57,7 +57,7 @@ class LoadAppAnnieHandler(webapp2.RequestHandler):
         engine = connect_to_cloudsql_sqlalchemy()
 
         # load app annie months
-        load_from_aa(csvfile=filename, engine=engine)
+        load_from_aa(csvfile=new_file, engine=engine)
 
         # remove duplicates
         connection = engine.connect()

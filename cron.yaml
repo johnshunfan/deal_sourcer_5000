@@ -1,0 +1,4 @@
+cron:
+- description: "daily refresh newco"
+  url: /refresh_newco
+  schedule: every 24 hours
